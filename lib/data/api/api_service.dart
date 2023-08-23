@@ -55,7 +55,6 @@ class ApiService {
     }).timeout(timeout);
 
     var stories = Stories.fromJson(json.decode(response.body));
-
     if (_isResponseSuccess(response.statusCode)) {
       return stories;
     } else {
