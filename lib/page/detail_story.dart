@@ -45,7 +45,7 @@ class _DetailStoryPageState extends State<DetailStoryPage> {
                         DetailStory(story: provider.story),
                         if (provider.story.lat != null &&
                             provider.story.lon != null)
-                          _buildMapLocation(provider.story)
+                          _buildMap(provider.story)
                       ],
                     ),
                   );
@@ -103,7 +103,7 @@ class _DetailStoryPageState extends State<DetailStoryPage> {
     );
   }
 
-  Widget _buildMapLocation(Story story) {
+  Widget _buildMap(Story story) {
     final location = LatLng(story.lat!, story.lon!);
 
     Future<void> onMapCreated(GoogleMapController controller) async {
@@ -141,9 +141,9 @@ class _DetailStoryPageState extends State<DetailStoryPage> {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
-        if (placemark != null) PlacemarkWidget(placemark: placemark!),
+        if (placemark != null) Placemark(placemark: placemark!),
         Container(
-          height: 240,
+          height: 320,
           width: double.infinity,
           margin: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -151,10 +151,10 @@ class _DetailStoryPageState extends State<DetailStoryPage> {
           ),
           child: GoogleMap(
             onMapCreated: onMapCreated,
-            myLocationButtonEnabled: false,
-            zoomControlsEnabled: false,
             mapToolbarEnabled: false,
             zoomGesturesEnabled: false,
+            myLocationButtonEnabled: false,
+            zoomControlsEnabled: false,
             markers: markers.toSet(),
             initialCameraPosition: CameraPosition(
               target: location,
@@ -167,10 +167,10 @@ class _DetailStoryPageState extends State<DetailStoryPage> {
   }
 }
 
-class PlacemarkWidget extends StatelessWidget {
+class Placemark extends StatelessWidget {
   final geo.Placemark placemark;
 
-  const PlacemarkWidget({super.key, required this.placemark});
+  const Placemark({super.key, required this.placemark});
 
   @override
   Widget build(BuildContext context) {
