@@ -1,3 +1,8 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'request_register.g.dart';
+
+@JsonSerializable()
 class RegisterRequest {
   String? name;
   String? email;
@@ -5,17 +10,8 @@ class RegisterRequest {
 
   RegisterRequest({this.name, this.email, this.password});
 
-  RegisterRequest.fromJson(Map<String, dynamic> json) {
-    name = json['name'];
-    email = json['email'];
-    password = json['password'];
-  }
+  factory RegisterRequest.fromJson(Map<String, dynamic> json) =>
+      _$RegisterRequestFromJson(json);
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['name'] = name;
-    data['email'] = email;
-    data['password'] = password;
-    return data;
-  }
+  Map<String, dynamic> toJson() => _$RegisterRequestToJson(this);
 }

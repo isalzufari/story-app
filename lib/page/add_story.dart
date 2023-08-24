@@ -1,20 +1,27 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/data/enum/state.dart';
 import 'package:story_app/data/model/request_add_story.dart';
 import 'package:story_app/provider/story_add.dart';
+import 'package:story_app/routes/location_manager.dart';
 import 'package:story_app/routes/page_manager.dart';
 import 'package:story_app/util/helper.dart';
+import 'package:story_app/util/show_toast.dart';
 import 'package:story_app/widget/safe_area.dart';
 
 class AddStoryPage extends StatefulWidget {
   final VoidCallback onSuccessAddStory;
+  final VoidCallback onAddLocationClicked;
 
-  const AddStoryPage({super.key, required this.onSuccessAddStory});
+  const AddStoryPage(
+      {super.key,
+      required this.onSuccessAddStory,
+      required this.onAddLocationClicked});
 
   @override
   State<AddStoryPage> createState() => _AddStoryPageState();
@@ -24,6 +31,7 @@ class _AddStoryPageState extends State<AddStoryPage> {
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
   File? _selectedImage;
+  LatLng? _selectedLocation;
 
   @override
   void dispose() {
@@ -33,23 +41,25 @@ class _AddStoryPageState extends State<AddStoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final widthScreen = MediaQuery.of(context).size.width;
+
     return SafeAreaScaffold(
       appBar: AppBar(title: const Text("Add Story")),
       body: ChangeNotifierProvider<AddStoryProvider>(
         create: (context) => AddStoryProvider(ApiService()),
         child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 64),
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 32),
             child: Form(
               key: _formKey,
               child: Column(
                 children: [
                   Container(
-                    height: 200,
-                    width: 200,
+                    height: 400,
+                    width: widthScreen,
                     decoration: BoxDecoration(
                       color: Theme.of(context).dividerColor,
                       borderRadius: const BorderRadius.all(
-                        Radius.circular(16),
+                        Radius.circular(8),
                       ),
                     ),
                     child: InkWell(
@@ -59,17 +69,19 @@ class _AddStoryPageState extends State<AddStoryPage> {
                         children: [
                           if (_selectedImage != null)
                             Opacity(
-                              opacity: 0.8,
+                              opacity: 1.0,
                               child: ClipRRect(
-                                  borderRadius: const BorderRadius.all(
-                                    Radius.circular(16),
-                                  ),
-                                  child: Image.file(_selectedImage!)),
+                                borderRadius: const BorderRadius.all(
+                                  Radius.circular(8),
+                                ),
+                                child: Image.file(_selectedImage!),
+                              ),
                             ),
-                          Text(
-                            "Select Image",
-                            style: Theme.of(context).textTheme.bodyLarge,
-                          ),
+                          if (_selectedImage == null)
+                            Text(
+                              "Select Image",
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
                         ],
                       ),
                     ),
@@ -92,11 +104,28 @@ class _AddStoryPageState extends State<AddStoryPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
+                  OutlinedButton(
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [Text("Select Location")],
+                    ),
+                    onPressed: () async {
+                      widget.onAddLocationClicked();
+                      final locationManager =
+                          context.read<LocationPageManager>();
+                      var result = await locationManager.waitForResult();
+                      setState(() {
+                        _selectedLocation = result;
+                      });
+                    },
+                  ),
                   Consumer<AddStoryProvider>(
                     builder: (context, provider, _) {
                       switch (provider.state) {
                         case ResultState.hasData:
-                          print(provider.message);
+                          showToast(provider.message);
+
                           afterBuildWidgetCallback(() {
                             context.read<PageManager>().returnData(true);
                             widget.onSuccessAddStory();
@@ -104,7 +133,7 @@ class _AddStoryPageState extends State<AddStoryPage> {
                           break;
                         case ResultState.error:
                         case ResultState.noData:
-                          print(provider.message);
+                          showToast(provider.message);
                           break;
                         default:
                           break;
@@ -130,7 +159,11 @@ class _AddStoryPageState extends State<AddStoryPage> {
   _onUploadPressed(AddStoryProvider provider) {
     if (_formKey.currentState?.validate() == true && _selectedImage != null) {
       AddStoryRequest request = AddStoryRequest(
-          description: _descriptionController.text, photo: _selectedImage!);
+        description: _descriptionController.text,
+        photo: _selectedImage!,
+        lat: _selectedLocation?.latitude,
+        lon: _selectedLocation?.longitude,
+      );
       provider.addStory(request);
     }
   }

@@ -15,9 +15,11 @@ class ApiService {
   static const Duration timeout = Duration(seconds: 5);
   static final Uri _loginEndpoint = Uri.parse("$_baseUrl/login");
   static final Uri _registerEndpoint = Uri.parse("$_baseUrl/register");
-  static final Uri _storiesEndpoint = Uri.parse("$_baseUrl/stories");
+  static final Uri _addStoryEndpoint = Uri.parse("$_baseUrl/stories");
 
   Uri _detailStoryEndpoint(String id) => Uri.parse("$_baseUrl/stories/$id");
+  Uri _storiesEndpoint(int page, int size) =>
+      Uri.parse("$_baseUrl/stories?page=$page&size=$size");
 
   Future<Login> login(LoginRequest request) async {
     final response = await http
@@ -46,11 +48,11 @@ class ApiService {
     }
   }
 
-  Future<Stories> getStories() async {
+  Future<Stories> getStories(int page, int size) async {
     var tokenPref = Token();
     var token = await tokenPref.getToken();
 
-    final response = await http.get(_storiesEndpoint, headers: {
+    final response = await http.get(_storiesEndpoint(page, size), headers: {
       'Authorization': 'Bearer $token',
     }).timeout(timeout);
 
@@ -83,7 +85,7 @@ class ApiService {
     var tokenPref = Token();
     var token = await tokenPref.getToken();
 
-    final request = http.MultipartRequest('POST', _storiesEndpoint);
+    final request = http.MultipartRequest('POST', _addStoryEndpoint);
     request.headers['Authorization'] = 'Bearer $token';
     request.fields['description'] = story.description;
     request.files.add(http.MultipartFile(

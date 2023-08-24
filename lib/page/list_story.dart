@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/data/enum/state.dart';
-import 'package:story_app/data/model/detail_story.dart';
 import 'package:story_app/data/preferences/token.dart';
 import 'package:story_app/provider/story_list.dart';
-import 'package:story_app/routes/page_manager.dart';
-import 'package:story_app/util/helper.dart';
 import 'package:story_app/widget/card_list.dart';
+
+import '../data/model/story.dart';
+import '../routes/page_manager.dart';
+import '../util/helper.dart';
 
 class ListStoryPage extends StatefulWidget {
   final VoidCallback onLogoutSuccess;
@@ -27,10 +28,20 @@ class ListStoryPage extends StatefulWidget {
 
 class _ListStoryPageState extends State<ListStoryPage> {
   final _refreshKey = GlobalKey<RefreshIndicatorState>();
+  final _scrollController = ScrollController();
+  late ListStoryProvider _listStoryProvider;
+  bool hasMoreData = true;
 
   @override
   void initState() {
     super.initState();
+
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent) {
+        _listStoryProvider.getStories();
+      }
+    });
 
     afterBuildWidgetCallback(() async {
       final pageManager = context.read<PageManager>();
@@ -45,6 +56,7 @@ class _ListStoryPageState extends State<ListStoryPage> {
   @override
   void dispose() {
     super.dispose();
+    _listStoryProvider.dispose();
   }
 
   @override
@@ -74,13 +86,18 @@ class _ListStoryPageState extends State<ListStoryPage> {
         create: (context) => ListStoryProvider(ApiService()),
         builder: (context, child) => Consumer<ListStoryProvider>(
           builder: (context, provider, _) {
+            _listStoryProvider = provider;
+
             switch (provider.state) {
               case ResultState.loading:
-                return const Center(child: CircularProgressIndicator());
+                hasMoreData = false;
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
               case ResultState.hasData:
                 return RefreshIndicator(
                   key: _refreshKey,
-                  onRefresh: () => provider.getStories(),
+                  onRefresh: () => provider.getStories(isRefresh: true),
                   child: _listStories(context, provider.stories),
                 );
               case ResultState.error:
@@ -94,7 +111,7 @@ class _ListStoryPageState extends State<ListStoryPage> {
                       Text(provider.message),
                       const SizedBox(height: 8),
                       ElevatedButton(
-                        onPressed: () => {provider.getStories()},
+                        onPressed: () => {provider.getStories(isRefresh: true)},
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -119,12 +136,19 @@ class _ListStoryPageState extends State<ListStoryPage> {
         horizontal: 16,
         vertical: 8,
       ),
-      itemCount: stories.length,
-      itemBuilder: (_, index) {
-        return CardList(
-          story: stories[index],
-          onStoryClicked: () => widget.onStoryClicked(stories[index].id),
-        );
+      controller: _scrollController,
+      itemCount: stories.length + (hasMoreData ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index < stories.length) {
+          return CardList(
+            story: stories[index],
+            onStoryClicked: () => widget.onStoryClicked(stories[index].id),
+          );
+        } else {
+          return const Center(
+            child: Text("No data"),
+          );
+        }
       },
     );
   }

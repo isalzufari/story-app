@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/data/enum/state.dart';
-import 'package:story_app/data/model/detail_story.dart';
+
+import '../data/model/story.dart';
 
 class DetailStoryProvider extends ChangeNotifier {
   final ApiService apiService;

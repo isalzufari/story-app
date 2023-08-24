@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:story_app/data/model/detail_story.dart';
+
+import '../data/model/story.dart';
 
 class CardList extends StatelessWidget {
   final Story story;
@@ -32,7 +33,7 @@ class CardList extends StatelessWidget {
                 height: 100,
                 width: 150,
                 child: Image.network(
-                  story.photoUrl ?? "",
+                  story.photoUrl ?? "https://dummyimage.com/600x400/000/fff",
                   fit: BoxFit.cover,
                   loadingBuilder: (_, child, loadingProgress) {
                     if (loadingProgress == null) {

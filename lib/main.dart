@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:story_app/routes/location_manager.dart';
 import 'package:story_app/routes/page_manager.dart';
 import 'package:story_app/routes/router_delegate.dart';
 
@@ -31,6 +32,9 @@ class _MyAppState extends State<MyApp> {
       providers: [
         ChangeNotifierProvider<PageManager>(
           create: (context) => PageManager(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => LocationPageManager(),
         )
       ],
       builder: (context, child) {

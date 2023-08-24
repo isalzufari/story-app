@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:story_app/data/preferences/token.dart';
+import 'package:story_app/page/add_location.dart';
 import 'package:story_app/page/add_story.dart';
 import 'package:story_app/page/detail_story.dart';
 import 'package:story_app/page/list_story.dart';
@@ -31,6 +32,7 @@ class MyRouterDelegate extends RouterDelegate
   bool? isLoggedIn;
   bool isRegister = false;
   bool isAddStory = false;
+  bool isAddLocation = false;
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +54,11 @@ class MyRouterDelegate extends RouterDelegate
         }
 
         isRegister = false;
-        isAddStory = false;
+        if (!isAddLocation) {
+          isAddStory = false;
+        }
+        isAddLocation = false;
+
         storyId = null;
         notifyListeners();
 
@@ -127,6 +133,19 @@ class MyRouterDelegate extends RouterDelegate
             child: AddStoryPage(
               onSuccessAddStory: () {
                 isAddStory = false;
+                notifyListeners();
+              },
+              onAddLocationClicked: () {
+                isAddLocation = true;
+                notifyListeners();
+              },
+            ),
+          ),
+        if (isAddLocation)
+          MaterialPage(
+            child: AddLocationPage(
+              onSuccessAddLocation: () {
+                isAddLocation = false;
                 notifyListeners();
               },
             ),
